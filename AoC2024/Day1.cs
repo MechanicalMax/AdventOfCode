@@ -6,11 +6,11 @@ namespace AoC2024
     {
         public Day1(string day) : base(day) { }
 
-        public static void Main(string[] args)
-        {
-            Day1 day1 = new Day1("1");
-            day1.run();
-        }
+        //public static void Main(string[] args)
+        //{
+        //    Day1 day1 = new Day1("1");
+        //    day1.run();
+        //}
 
         private (int[], int[]) readLeftRight()
         {
