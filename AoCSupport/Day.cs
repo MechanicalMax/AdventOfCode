@@ -9,7 +9,7 @@ namespace AoCSupport
         public abstract string Year { get; }
         public Day()
         {
-            _input = new Input(DayNumber);
+            _input = new Input(DayNumber, Year);
         }
         public abstract void PartA();
         public abstract void PartB();
