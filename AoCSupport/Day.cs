@@ -2,26 +2,16 @@
 
 namespace AoCSupport
 {
-    public class Day
+    public abstract class Day
     {
-        public string DayNumber { get; init; }
         protected Input _input;
-        public Day(string dayNumber)
+        public abstract string DayNumber { get; }
+        public abstract string Year { get; }
+        public Day()
         {
-            int numericDay = int.Parse(dayNumber);
-            if (!(numericDay > 0 && numericDay <= 25))
-            { 
-                throw new ArgumentException("Provided day is not in [1, 25]");
-            }
-            DayNumber = dayNumber;
-            _input = new Input(dayNumber);
+            _input = new Input(DayNumber);
         }
-        public void run()
-        {
-            this.partA();
-            this.partB();
-        }
-        public virtual void partA() { Console.WriteLine("No Part A"); }
-        public virtual void partB() { Console.WriteLine("No Part B"); }
+        public abstract void PartA();
+        public abstract void PartB();
     }
 }

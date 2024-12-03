@@ -4,12 +4,13 @@ namespace AoC2024
 {
     public class Day2 : AoCSupport.Day
     {
-        public Day2(string day) : base(day) { }
-
+        public override string DayNumber => "2";
+        public override string Year => "2024";
         public static void Main(string[] args)
         {
-            Day2 day2 = new Day2("2");
-            day2.run();
+            Day2 day2 = new Day2();
+            day2.PartA();
+            day2.PartB();
         }
         private int[][] CreateCombinationsRemovingOne(int[] levels)
         {
@@ -54,8 +55,7 @@ namespace AoC2024
             
             return true;
         }
-
-        public override void partA()
+        public override void PartA()
         {
             int total = 0;
             foreach (string l in _input.Lines)
@@ -69,8 +69,7 @@ namespace AoC2024
             }
             Console.WriteLine(total);
         }
-
-        public override void partB()
+        public override void PartB()
         {
             int total = 0;
             foreach (string l in _input.Lines)
