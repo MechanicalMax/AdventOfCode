@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AoC2024
+﻿namespace AoC2024
 {
     public sealed class Day1 : AoCSupport.Day
     {

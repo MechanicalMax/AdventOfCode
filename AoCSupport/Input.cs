@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace AoCSupport
+﻿namespace AoCSupport
 {
     public sealed class Input
     {

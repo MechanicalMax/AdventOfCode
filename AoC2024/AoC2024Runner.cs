@@ -1,5 +1,4 @@
 ﻿using AoCSupport;
-using System;
 
 namespace AoC2024
 {

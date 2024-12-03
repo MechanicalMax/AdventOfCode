@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AoCSupport
+﻿namespace AoCSupport
 {
     public class DayRunner
     {
