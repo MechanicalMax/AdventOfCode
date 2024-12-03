@@ -11,7 +11,7 @@ namespace AoCSupport
         {
             _input = new Input(DayNumber, Year);
         }
-        public abstract void PartA();
-        public abstract void PartB();
+        public abstract string PartA();
+        public abstract string PartB();
     }
 }

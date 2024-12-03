@@ -2,16 +2,10 @@
 
 namespace AoC2024
 {
-    public class Day1 : AoCSupport.Day
+    public sealed class Day1 : AoCSupport.Day
     {
         public override string DayNumber => "1";
         public override string Year => "2024";
-        //public static void Main(string[] args)
-        //{
-        //    Day1 day1 = new Day1();
-        //    day1.PartA();
-        //    day1.PartB();
-        //}
         private (int[], int[]) readLeftRight()
         {
             int[] left = new int[_input.Lines.Length];
@@ -24,7 +18,7 @@ namespace AoC2024
             }
             return (left, right);
         }
-        public override void PartA()
+        public override string PartA()
         {
             (int[] left, int[] right) = readLeftRight();
 
@@ -36,9 +30,9 @@ namespace AoC2024
             {
                 total += Math.Abs(left[i] - right[i]);
             }
-            Console.WriteLine(total);
+            return total.ToString();
         }
-        public override void PartB()
+        public override string PartB()
         {
             (int[] left, int[] right) = readLeftRight();
 
@@ -54,7 +48,7 @@ namespace AoC2024
                 }
             }
 
-            Console.WriteLine(total);
+            return total.ToString();
         }
     }
 }
