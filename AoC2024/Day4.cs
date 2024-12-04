@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
 
 namespace AoC2024
 {
@@ -20,7 +21,64 @@ namespace AoC2024
         }
         public override string PartB()
         {
-            return "";
+            int count = 0;
+
+            for (int row = 1; row < _input.Lines.Length - 1; row++)
+            {
+                for (int col = 1; col < _input.Lines[row].Length - 1; col++)
+                {
+                    count += IsXMasCenter(row, col, _input.Lines) ? 1 : 0;
+                }
+            }
+
+            return count.ToString();
+        }
+        private bool IsXMasCenter(int row, int col, string[] grid)
+        {
+            if (grid[row][col] != 'A')
+            {
+                return false;
+            }
+
+            if (grid[row - 1][col - 1] == 'M')
+            {
+                if (grid[row + 1][col + 1] != 'S')
+                {
+                    return false;
+                }
+            }
+            else if (grid[row - 1][col - 1] == 'S')
+            {
+                if (grid[row + 1][col + 1] != 'M')
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            if (grid[row - 1][col + 1] == 'M')
+            {
+                if (grid[row + 1][col - 1] != 'S')
+                {
+                    return false;
+                }
+            }
+            else if (grid[row - 1][col + 1] == 'S')
+            {
+                if (grid[row + 1][col - 1] != 'M')
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
         }
         private string[] GetVerticalLines(string[] horizontal)
         {
