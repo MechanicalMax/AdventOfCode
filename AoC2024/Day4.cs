@@ -36,10 +36,47 @@ namespace AoC2024
             }
             return vertical;
         }
+        private string[] GetPositiveDiagonalLines(string[] horizontal)
+        {
+            int maxRow = horizontal.Length;
+            int maxCol = horizontal[0].Length;
+            string[] vertical = new string[maxRow + maxCol - 1];
+
+            int startRow = 0;
+            int startCol = 0;
+            int diagonalRow = 0;
+            while (startRow < maxRow)
+            {
+                string newRow = "";
+                int curRow = startRow;
+                int curCol = startCol;
+                
+                while (curRow < maxRow && curCol >= 0)
+                {
+                    newRow += horizontal[curRow][curCol];
+                    curRow++;
+                    curCol--;
+                }
+
+                vertical[diagonalRow] = newRow;
+                diagonalRow++;
+                
+                if (startCol == maxCol - 1)
+                {
+                    startRow++;
+                }
+                else
+                {
+                    startCol++;
+                }
+            }
+            return vertical;
+        }
         private string[][] GetAllDirections(string[] horizontal)
         {
             return new string[][] { horizontal, 
                     GetVerticalLines(horizontal),
+                    GetPositiveDiagonalLines(horizontal),
                     };
         }
         private int CountWordOccurrences(string[] search, Regex word)
