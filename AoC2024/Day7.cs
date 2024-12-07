@@ -17,7 +17,14 @@
         }
         public override string PartB()
         {
-            return "";
+            double validSum = 0;
+
+            foreach (string line in _input.Lines)
+            {
+                (double testValue, List<double> operands) = ParseEquation(line);
+                validSum += CountValidConcatCombinations(testValue, operands) > 0 ? testValue : 0;
+            }
+            return validSum.ToString();
         }
         private (double, List<double>) ParseEquation(string equation)
         {
@@ -46,6 +53,37 @@
 
             totalValid += CountValidCombinations(goal - operands.Last(), slicedOperands);
             totalValid += CountValidCombinations(goal / operands.Last(), slicedOperands);
+
+            return totalValid;
+        }
+        private int CountValidConcatCombinations(double goal, List<double> operands)
+        {
+            int totalValid = 0;
+
+            if (operands.Count == 1)
+            {
+                if (goal == operands[0])
+                {
+                    totalValid++;
+                }
+                return totalValid;
+            }
+
+            List<double> slicedOperands = operands.Slice(0, operands.Count - 1);
+
+            totalValid += CountValidConcatCombinations(goal - operands.Last(), slicedOperands);
+            totalValid += CountValidConcatCombinations(goal / operands.Last(), slicedOperands);
+
+            ulong concatDivider = 1;
+            while (Math.Floor(operands.Last() / concatDivider) > 0)
+            {
+                concatDivider *= 10;
+            }
+            
+            if (goal % concatDivider - operands.Last() == 0)
+            {
+                totalValid += CountValidConcatCombinations(Math.Floor(goal / concatDivider), slicedOperands);
+            }
 
             return totalValid;
         }
