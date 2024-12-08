@@ -23,7 +23,58 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var uniqueAntinodes = new HashSet<(int, int)>();
+
+            for (int row = 0; row < _input.Lines.Length; row++)
+            {
+                for (int col = 0; col < _input.Lines[row].Length; col++)
+                {
+                    if (_input.Lines[row][col] != '.')
+                    {
+                        uniqueAntinodes.UnionWith(getAllAntinodeLocations((row, col), _input.Lines));
+                    }
+                }
+            }
+
+            return uniqueAntinodes.Count.ToString();
+        }
+        private HashSet<(int, int)> getAllAntinodeLocations((int, int) location, string[] grid)
+        {
+            var antinodes = new HashSet<(int, int)>();
+            char antennaType = grid[location.Item1][location.Item2];
+
+            for (int row = 0; row < grid.Length; row++)
+            {
+                for (int col = 0; col < grid[row].Length; col++)
+                {
+                    if (grid[row][col] == antennaType)
+                    {
+                        if (row == location.Item1 && col == location.Item2)
+                        {
+                            continue;
+                        }
+
+                        int rowDiff = row - location.Item1;
+                        int colDiff = col - location.Item2;
+
+                        var pointOne = (row, col);
+                        while (IsInGrid(pointOne, grid))
+                        {
+                            antinodes.Add(pointOne);
+                            pointOne = (pointOne.Item1 + rowDiff, pointOne.Item2 + colDiff);
+                        }
+
+                        var pointTwo = (location.Item1, location.Item2);
+                        if (IsInGrid(pointTwo, grid))
+                        {
+                            antinodes.Add(pointTwo);
+                            pointTwo = (pointTwo.Item1 - rowDiff, pointTwo.Item2 - colDiff);
+                        }
+                    }
+                }
+            }
+
+            return antinodes;
         }
         private HashSet<(int, int)> getAntinodeLocations((int, int) location, string[] grid)
         {
