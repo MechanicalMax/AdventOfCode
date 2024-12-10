@@ -18,7 +18,39 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            int trailheadScoreSum = 0;
+
+            List<(int, int)> trailheadLocations = GetTrailheadLocations(_input.Lines);
+            foreach (var trailheadLocation in trailheadLocations)
+            {
+                trailheadScoreSum += CountAllPaths(_input.Lines, trailheadLocation.Item1, trailheadLocation.Item2);
+            }
+
+            return trailheadScoreSum.ToString();
+        }
+        private int CountAllPaths(string[] grid, int row, int col)
+        {
+            var searchStack = new Stack<(int, int)>();
+            int count = 0;
+
+            searchStack.Push((row, col));
+
+            while (searchStack.Count > 0)
+            {
+                var step = searchStack.Pop();
+
+                if (grid[step.Item1][step.Item2] == '9')
+                {
+                    count++;
+                }
+
+                foreach (var nextStep in PossibleStepsInGrid(grid, step.Item1, step.Item2))
+                {
+                    searchStack.Push(nextStep);
+                }
+            }
+
+            return count;
         }
         private HashSet<(int,int)> FindTrailEnds(string[] grid, int row, int col)
         {
@@ -33,7 +65,6 @@
             {
                 var step = searchStack.Pop();
                 visited.Add(step);
-                //Console.WriteLine($"({step.Item1}, {step.Item2})");
                 
                 if (grid[step.Item1][step.Item2] == '9')
                 {
@@ -42,7 +73,6 @@
                 
                 foreach (var nextStep in PossibleStepsInGrid(grid, step.Item1, step.Item2))
                 {
-                    //Console.WriteLine($"Next:({nextStep.Item1}, {nextStep.Item2})");
                     if (!visited.Contains(nextStep))
                     {
                         searchStack.Push(nextStep);
