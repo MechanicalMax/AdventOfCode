@@ -16,7 +16,63 @@ namespace AoC2024
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var storage = DecompressDiskMapAsArray(_input.Lines[0]);//"2333133121414131402");//
+
+            int currentIndex = storage.Length - 1;
+            int currentFileID = storage[currentIndex];
+            while (currentFileID >= 0)
+            {
+                int currentFileLength = 0;
+                while (storage[currentIndex] != currentFileID)
+                {
+                    currentIndex--;
+                }
+                while (currentIndex >= 0 && storage[currentIndex] == currentFileID)
+                {
+                    currentFileLength++;
+                    currentIndex--;
+                }
+                //Console.WriteLine($"ID:{currentFileID}, len:{currentFileLength}");
+
+                int freeSpaceStart = FindOpenSpace(storage, currentFileLength);
+                bool foundSpace = freeSpaceStart <= currentIndex;
+                
+                //Console.WriteLine($"{foundSpace} Space from [{freeSpaceStart}, {freeSpaceStart + currentFileLength})");
+
+                if (foundSpace)
+                {
+                    int sourceStartIndex = currentIndex + 1;
+                    for (int i = 0; i < currentFileLength; i++)
+                    {
+                        storage[freeSpaceStart + i] = storage[sourceStartIndex + i];
+                        storage[sourceStartIndex + i] = -1;
+                    }
+                }
+
+                currentFileID--;
+            }
+
+            return CalculateCheckSum(storage).ToString();
+        }
+        private int FindOpenSpace(int[] storage, int length)
+        {
+            int freeRightIndex = 0;
+            int freeLeftIndex = 0;
+            while (freeRightIndex < storage.Length)
+            {
+                if (freeRightIndex - freeLeftIndex == length)
+                {
+                    break;
+                }
+
+                if (storage[freeRightIndex] != -1)
+                {
+                    freeLeftIndex = freeRightIndex + 1;
+                }
+                freeRightIndex++;
+            }
+
+            return freeLeftIndex;
         }
         private double CalculateCheckSum(int[] storage)
         {
