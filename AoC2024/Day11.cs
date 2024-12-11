@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace AoC2024
+﻿namespace AoC2024
 {
     internal class Day11 : AoCSupport.Day
     {
