@@ -6,10 +6,10 @@
         public override string Year => "2024";
         private struct Robot
         {
-            public double Px;
-            public double Py;
-            public double Vx;
-            public double Vy;
+            public int Px;
+            public int Py;
+            public int Vx;
+            public int Vy;
         }
         public override string PartA()
         {
@@ -21,9 +21,53 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            /*
+             * Strategy: Look for patterns by printing out the grid
+             * - Found a horizontal and vertical rectangle where robots were more densely
+             *   packed than at other times
+             * - These horizontal and vertical patterns repeated with a constant interval
+             *   (103 and 101, respectively)
+             * - Find where the lines appear at the same time -> 7286
+             * (Used graphing calculator to save time rather than programming a solution)
+             */
+            var robots = ParseRobots(_input.Lines);
+
+            string gridPictures = "";
+            gridPictures += GridStringAtTime(RobotsAfterSeconds(robots, 14), 14);
+            gridPictures += GridStringAtTime(RobotsAfterSeconds(robots, 76), 76);
+            gridPictures += GridStringAtTime(RobotsAfterSeconds(robots, 115), 115);
+            gridPictures += GridStringAtTime(RobotsAfterSeconds(robots, 179), 179);
+
+            gridPictures += GridStringAtTime(RobotsAfterSeconds(robots, 7286), 7286);
+
+            return gridPictures;
         }
-        private HashSet<Robot> RobotsAfterSeconds(HashSet<Robot> robots, double seconds)
+        private string GridStringAtTime(HashSet<Robot> robots, int time)
+        {
+            string gridString = $"Time = {time} seconds\n";
+            for (int y = 0; y < 103; y++)
+            {
+                for (int x = 0; x < 101; x++)
+                {
+                    bool containsRobot = false;
+                    foreach (var robot in robots)
+                    {
+                        if (robot.Px == x && robot.Py == y)
+                        {
+                            containsRobot = true;
+                            break;
+                        }
+                    }
+                    gridString += containsRobot ? "#" : ".";
+                }
+                gridString += "\n";
+            }
+            
+            gridString += "\n\n";
+            
+            return gridString;
+        }
+        private HashSet<Robot> RobotsAfterSeconds(HashSet<Robot> robots, int seconds)
         {
             var newRobots = new HashSet<Robot>();
 
@@ -82,10 +126,10 @@
                 string[] pos = posAndVel[0].TrimStart(['p', '=']).Split(',');
                 string[] vel = posAndVel[1].TrimStart(['v', '=']).Split(',');
 
-                robot.Px = double.Parse(pos[0]);
-                robot.Py = double.Parse(pos[1]);
-                robot.Vx = double.Parse(vel[0]);
-                robot.Vy = double.Parse(vel[1]);
+                robot.Px = int.Parse(pos[0]);
+                robot.Py = int.Parse(pos[1]);
+                robot.Vx = int.Parse(vel[0]);
+                robot.Vy = int.Parse(vel[1]);
 
                 robots.Add(robot);
             }
