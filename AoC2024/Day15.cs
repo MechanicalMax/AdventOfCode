@@ -293,7 +293,8 @@
         }
         private void WriteGrid(char[,] grid)
         {
-            Console.Clear();
+            Console.CursorVisible = false;
+            Console.SetCursorPosition(0,0);
             for (int y = 0; y < grid.GetLength(1); y++)
             {
                 for (int x = 0; x < grid.GetLength(0); x++)
