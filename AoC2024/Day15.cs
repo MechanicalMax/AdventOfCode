@@ -6,7 +6,7 @@
         public override string Year => "2024";
         public override string PartA()
         {
-            (char[,] grid, string[] instructions) = ParseGridAndInstructions(_input.Raw);//"##########\n#..O..O.O#\n#......O.#\n#.OO..O.O#\n#..O@..O.#\n#O#..O...#\n#O..O..O.#\n#.OO.O.OO#\n#....O...#\n##########\n\n<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^\nvvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v\n><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<\n<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^\n^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><\n^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^\n>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^\n<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>\n^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>\nv^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^");//_input.Raw);
+            (char[,] grid, string[] instructions) = ParseGridAndInstructions(_input.Raw);
             string singleInstructions = string.Join("", instructions);
 
             grid = FollowInstructions(grid, singleInstructions);
@@ -15,7 +15,162 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            (char[,] grid, string[] instructions) = ParseGridAndInstructions(_input.Raw);
+            string singleInstructions = string.Join("", instructions);
+            grid = ExpandGrid(grid);
+
+            grid = ExpandedGridFollowInstructions(grid, singleInstructions);
+
+            return SumGPSCoordinates(grid).ToString();
+        }
+        private char[,] ExpandedGridFollowInstructions(char[,] grid, string instructions)
+        {
+            (int robotx, int roboty) = GetRobotPosition(grid);
+            foreach (var instruction in instructions)
+            {
+                //WriteGrid(grid);
+                (int changex, int changey) = ArrowToDirectionVector(instruction);
+                int nextx = robotx + changex;
+                int nexty = roboty + changey;
+
+                if (grid[nextx, nexty] == '.')
+                {
+                    grid[robotx, roboty] = '.';
+                    grid[nextx, nexty] = '@';
+                    robotx += changex;
+                    roboty += changey;
+                }
+                else if (grid[nextx, nexty] == '[' || grid[nextx, nexty] == ']')
+                {
+                    if (changey == 0)
+                    {
+                        bool foundAvailable = false;
+                        int availablex = nextx + changex;
+                        while (grid[availablex, roboty] != '#')
+                        {
+                            if (grid[availablex, roboty] == '.')
+                            {
+                                foundAvailable = true;
+                                break;
+                            }
+                            availablex += changex;
+                        }
+                        if (foundAvailable)
+                        {
+                            while (availablex != robotx)
+                            {
+                                grid[availablex, roboty] = grid[availablex - changex, roboty];
+                                availablex -= changex;
+                            }
+                            grid[robotx, roboty] = '.';
+                            robotx += changex;
+                        }
+                    }
+                    else
+                    {
+                        int boxLeftx = nextx;
+                        int boxy = nexty;
+                        if (grid[nextx, nexty] == ']')
+                        {
+                            boxLeftx--;
+                        }
+                        var boxes = BoxesInMovableFormation(grid, boxLeftx, boxy, changey);
+                        if (boxes.Count != 0)
+                        {
+                            while (boxes.Count > 0)
+                            {
+                                (int curBoxLeftx, int curBoxy) = boxes.Pop();
+                                grid[curBoxLeftx, curBoxy] = '.';
+                                grid[curBoxLeftx + 1, curBoxy] = '.';
+                                grid[curBoxLeftx, curBoxy + changey] = '[';
+                                grid[curBoxLeftx + 1, curBoxy + changey] = ']';
+                            }
+                            grid[robotx, roboty] = '.';
+                            roboty += changey;
+                            grid[robotx, roboty] = '@';
+                        }
+                    }
+                }
+            }
+            //WriteGrid(grid);
+            return grid;
+        }
+        private Stack<(int, int)> BoxesInMovableFormation(char[,] grid, int boxLeftx, int boxy, int changey)
+        {
+            var moveableBoxes = new Stack<(int, int)>();
+
+            var nextBoxes = new Queue<(int, int)>();
+            nextBoxes.Enqueue((boxLeftx, boxy));
+
+            while (nextBoxes.Count != 0)
+            {
+                (int curBoxLeftx, int curBoxy) = nextBoxes.Dequeue();
+                int nexty = curBoxy + changey;
+                
+                if (grid[curBoxLeftx,nexty] == '#' || grid[curBoxLeftx + 1,nexty] == '#')
+                {
+                    return new Stack<(int, int)>();
+                }
+
+                moveableBoxes.Push((curBoxLeftx, curBoxy));
+                if (grid[curBoxLeftx,nexty] == '.' && grid[curBoxLeftx + 1,nexty] == '.')
+                {
+                    continue;
+                }
+
+                if (grid[curBoxLeftx, nexty] == '[')
+                {
+                    nextBoxes.Enqueue((curBoxLeftx, nexty));
+                    continue;
+                }
+
+                if (grid[curBoxLeftx - 1,nexty] == '[')
+                {
+                    nextBoxes.Enqueue((curBoxLeftx - 1, nexty));
+                }
+
+                if (grid[curBoxLeftx + 1, nexty] == '[')
+                {
+                    nextBoxes.Enqueue((curBoxLeftx + 1, nexty));
+                }
+
+            }
+
+            return moveableBoxes;
+        }
+        private char[,] ExpandGrid(char[,] grid)
+        {
+            var newGrid = new char[grid.GetLength(0) * 2, grid.GetLength(1)];
+            for (int x = 0; x < grid.GetLength(0); x++)
+            {
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+                    switch (grid[x,y])
+                    {
+                        case '#':
+                            newGrid[x * 2, y] = '#';
+                            newGrid[x * 2 + 1, y] = '#';
+                            break;
+                        case 'O':
+                            newGrid[x * 2, y] = '[';
+                            newGrid[x * 2 + 1, y] = ']';
+                            break;
+                        case '.':
+                            newGrid[x * 2, y] = '.';
+                            newGrid[x * 2 + 1, y] = '.';
+                            break;
+                        case '@':
+                            newGrid[x * 2, y] = '@';
+                            newGrid[x * 2 + 1, y] = '.';
+                            break;
+                        default:
+                            newGrid[x * 2, y] = '?';
+                            newGrid[x * 2 + 1, y] = '?';
+                            break;
+                    }
+                }
+            }
+            return newGrid;
         }
         private char[,] FollowInstructions(char[,] grid, string instructions)
         {
@@ -85,7 +240,7 @@
             {
                 for (int y = 0; y < grid.GetLength(1); y++)
                 {
-                    if (grid[x,y] == 'O')
+                    if (grid[x,y] == 'O' || grid[x, y] == '[')
                     {
                         sum += 100 * y + x;
                     }
