@@ -71,21 +71,27 @@
         {
             var gridInfo = new GridInfo(_input.Lines);// "#################\r\n#...#...#...#..E#\r\n#.#.#.#.#.#.#.#.#\r\n#.#.#.#...#...#.#\r\n#.#.#.#.###.#.#.#\r\n#...#.#.#.....#.#\r\n#.#.#.#.#.#####.#\r\n#.#...#.#.#.....#\r\n#.#.#####.#.###.#\r\n#.#.#.......#...#\r\n#.#.###.#####.###\r\n#.#.#...#.....#.#\r\n#.#.#.#####.###.#\r\n#.#.#.........#.#\r\n#.#.#.#########.#\r\n#S#.............#\r\n#################".Trim().Split("\n"));//_input.Lines);
 
-            var transformCosts = new Dictionary<Transform, int>();
-            var adjacentTransforms = new Stack<(Transform, int)>();
-            
+            var unvisitedTransforms = new PriorityQueue<(Transform, int), int>();
+            var visitedTransforms = new HashSet<Transform>();
+
             var curTransform = new Transform(
                 gridInfo.StartLocation.Item1,
                 gridInfo.StartLocation.Item2,
                 gridInfo.StartDirection
                 );
 
-            transformCosts[curTransform] = 0;
-            adjacentTransforms.Push((curTransform, 0));
+            unvisitedTransforms.Enqueue((curTransform, 0), 0);
 
-            while (adjacentTransforms.Count > 0)
+            int smallestCost = int.MaxValue;
+
+            while (unvisitedTransforms.Count > 0)
             {
-                (curTransform, int curCost) = adjacentTransforms.Pop();
+                (curTransform, int cost) = unvisitedTransforms.Dequeue();
+                if (gridInfo.IsAtEnd(curTransform))
+                {
+                    smallestCost = cost;
+                    break;
+                }
 
                 foreach ((Transform newTransform, int additionalCost) in gridInfo.GetPossibleMoves(curTransform))
                 {
@@ -95,36 +101,15 @@
                         continue;
                     }
 
-                    int newCost = curCost + additionalCost;
-                    if (transformCosts.ContainsKey(newTransform))
+                    if (!visitedTransforms.Contains(newTransform))
                     {
-                        if (transformCosts[newTransform] > newCost)
-                        {
-                            transformCosts[newTransform] = newCost;
-                            adjacentTransforms.Push((newTransform, newCost));
-                        }
-                    }
-                    else
-                    {
-                        //if (transformCosts.ContainsKey(new Transform(newTransform.Row, newTransform.Col,
-                        //    (newTransform.Direction + 2) % 4))
-                        //    )
-                        //{
-                        //    continue;
-                        //}
-                        transformCosts.Add(newTransform, newCost);
-                        adjacentTransforms.Push((newTransform, newCost));
+                        visitedTransforms.Add(newTransform);
+                        unvisitedTransforms.Enqueue((newTransform, cost + additionalCost), cost + additionalCost);
                     }
                 }
             }
 
-            var endLocationOne = new Transform(gridInfo.EndLocation.Item1, gridInfo.EndLocation.Item2, 0);
-            var endLocationTwo = new Transform(gridInfo.EndLocation.Item1, gridInfo.EndLocation.Item2, 1);
-
-            int endCostOne = transformCosts.ContainsKey(endLocationOne) ? transformCosts[endLocationOne] : int.MaxValue;
-            int endCostTwo = transformCosts.ContainsKey(endLocationTwo) ? transformCosts[endLocationTwo] : int.MaxValue;
-
-            return int.Min(endCostOne, endCostTwo).ToString();
+            return smallestCost.ToString();
         }
         public override string PartB()
         {
