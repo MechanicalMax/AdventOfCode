@@ -31,6 +31,17 @@
                     }
                 }
             }
+            public HashSet<(int, int)> GetNeighborPoints((int, int) point)
+            {
+                var points = new HashSet<(int, int)>();
+
+                foreach (var change in Directions)
+                {
+                    points.Add((point.Item1 + change.Item1, point.Item2 + change.Item2));
+                }
+
+                return points;
+            }
             public HashSet<(Transform, int)> GetPossibleMoves(Transform transform)
             {
                 var moves = new HashSet<(Transform, int)>();
@@ -113,7 +124,79 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var gridInfo = new GridInfo("###############\r\n#.......#....E#\r\n#.#.###.#.###.#\r\n#.....#.#...#.#\r\n#.###.#####.#.#\r\n#.#.#.......#.#\r\n#.#.#####.###.#\r\n#...........#.#\r\n###.#.#####.#.#\r\n#...#.....#.#.#\r\n#.#.#.###.#.#.#\r\n#.....#...#.#.#\r\n#.###.#.#.#.#.#\r\n#S..#.....#...#\r\n###############".Trim().Split("\n"));//_input.Lines);
+
+            var unvisitedTransforms = new PriorityQueue<(Transform, int), int>();
+            var visitedTransforms = new HashSet<Transform>();
+            var visitedPoints = new Dictionary<(int, int), int>();
+
+            var curTransform = new Transform(
+                gridInfo.StartLocation.Item1,
+                gridInfo.StartLocation.Item2,
+                gridInfo.StartDirection
+                );
+
+            unvisitedTransforms.Enqueue((curTransform, 0), 0);
+
+            int smallestCost = int.MaxValue;
+
+            while (unvisitedTransforms.Count > 0)
+            {
+                (curTransform, int cost) = unvisitedTransforms.Dequeue();
+                if (gridInfo.IsAtEnd(curTransform))
+                {
+                    smallestCost = cost;
+                    break;
+                }
+
+                foreach ((Transform newTransform, int additionalCost) in gridInfo.GetPossibleMoves(curTransform))
+                {
+                    if (gridInfo.IsFacingWall(newTransform)
+                        && additionalCost == 1000)
+                    {
+                        continue;
+                    }
+
+                    if (!visitedTransforms.Contains(newTransform))
+                    {
+                        visitedTransforms.Add(newTransform);
+                        unvisitedTransforms.Enqueue((newTransform, cost + additionalCost), cost + additionalCost);
+                        visitedPoints.TryAdd((newTransform.Row, newTransform.Col), cost + additionalCost);
+                    }
+                }
+            }
+            
+            return CountPointsOnAShortestPath(visitedPoints, gridInfo).ToString();
+        }
+        private int CountPointsOnAShortestPath(Dictionary<(int, int), int> searchedPoints, GridInfo gridInfo)
+        {
+            int count = 1;
+
+            var frontierPoints = new Queue<((int, int), int)>();
+            var endPoint = (gridInfo.EndLocation.Item1, gridInfo.EndLocation.Item2);
+            int lastDistance = searchedPoints[endPoint];
+
+            frontierPoints.Enqueue((endPoint, lastDistance));
+
+            while ( frontierPoints.Count > 0 )
+            {
+                var curPointInfo = frontierPoints.Dequeue();
+                var possibleNeighborPoints = gridInfo.GetNeighborPoints(curPointInfo.Item1);
+                foreach (var possibleNeighborPoint in possibleNeighborPoints)
+                {
+                    if (searchedPoints.ContainsKey(possibleNeighborPoint)
+                        && (searchedPoints[possibleNeighborPoint] + 1001 == curPointInfo.Item2
+                        || searchedPoints[possibleNeighborPoint] - 999 == curPointInfo.Item2
+                        || searchedPoints[possibleNeighborPoint] + 1 == curPointInfo.Item2)
+                        && !frontierPoints.Contains((possibleNeighborPoint, searchedPoints[possibleNeighborPoint])))
+                    {
+                        count++;
+                        frontierPoints.Enqueue((possibleNeighborPoint, searchedPoints[possibleNeighborPoint]));
+                    }
+                }
+            }
+
+            return count;
         }
     }
 }
