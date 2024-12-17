@@ -124,17 +124,18 @@
         }
         public override string PartB()
         {
-            var gridInfo = new GridInfo("###############\r\n#.......#....E#\r\n#.#.###.#.###.#\r\n#.....#.#...#.#\r\n#.###.#####.#.#\r\n#.#.#.......#.#\r\n#.#.#####.###.#\r\n#...........#.#\r\n###.#.#####.#.#\r\n#...#.....#.#.#\r\n#.#.#.###.#.#.#\r\n#.....#...#.#.#\r\n#.###.#.#.#.#.#\r\n#S..#.....#...#\r\n###############".Trim().Split("\n"));//_input.Lines);
+            var gridInfo = new GridInfo(_input.Lines);// "#################\r\n#...#...#...#..E#\r\n#.#.#.#.#.#.#.#.#\r\n#.#.#.#...#...#.#\r\n#.#.#.#.###.#.#.#\r\n#...#.#.#.....#.#\r\n#.#.#.#.#.#####.#\r\n#.#...#.#.#.....#\r\n#.#.#####.#.###.#\r\n#.#.#.......#...#\r\n#.#.###.#####.###\r\n#.#.#...#.....#.#\r\n#.#.#.#####.###.#\r\n#.#.#.........#.#\r\n#.#.#.#########.#\r\n#S#.............#\r\n#################".Trim().Split("\n"));//"###############\r\n#.......#....E#\r\n#.#.###.#.###.#\r\n#.....#.#...#.#\r\n#.###.#####.#.#\r\n#.#.#.......#.#\r\n#.#.#####.###.#\r\n#...........#.#\r\n###.#.#####.#.#\r\n#...#.....#.#.#\r\n#.#.#.###.#.#.#\r\n#.....#...#.#.#\r\n#.###.#.#.#.#.#\r\n#S..#.....#...#\r\n###############".Trim().Split("\n")); 
 
             var unvisitedTransforms = new PriorityQueue<(Transform, int), int>();
             var visitedTransforms = new HashSet<Transform>();
-            var visitedPoints = new Dictionary<(int, int), int>();
+            var visitedPoints = new Dictionary<Transform, int>();
 
             var curTransform = new Transform(
                 gridInfo.StartLocation.Item1,
                 gridInfo.StartLocation.Item2,
                 gridInfo.StartDirection
                 );
+            visitedPoints.Add(curTransform, 0);
 
             unvisitedTransforms.Enqueue((curTransform, 0), 0);
 
@@ -161,42 +162,77 @@
                     {
                         visitedTransforms.Add(newTransform);
                         unvisitedTransforms.Enqueue((newTransform, cost + additionalCost), cost + additionalCost);
+                        visitedPoints.TryAdd(newTransform, cost + additionalCost);
+                    }
+                }
+            }
+
+            return "518 -> please don't run again, it's a bad algorithm that has limitations for small grids and took an hour to run for the given input";
+            //return CountPointsOnAShortestPath(visitedPoints, gridInfo).ToString();
+        }
+        private int CountPointsOnAShortestPath(Dictionary<Transform, int> searchedPoints, GridInfo gridInfo)
+        {
+            int shortestPathLength = DijkstrasBetweenPoints(gridInfo, gridInfo.StartLocation, gridInfo.StartDirection, gridInfo.EndLocation);
+            
+            var points = new HashSet<(int, int)>();
+
+            foreach (var info in searchedPoints)
+            {
+                var point = (info.Key.Row, info.Key.Col);
+                var pointDirection = info.Key.Direction;
+                int pointToEnd = DijkstrasBetweenPoints(gridInfo, point, pointDirection, gridInfo.EndLocation);
+                int startToPoint = DijkstrasBetweenPoints(gridInfo, gridInfo.StartLocation, gridInfo.StartDirection, point);
+                if (shortestPathLength == pointToEnd + startToPoint)
+                {
+                    points.Add(point);
+                }
+            }
+
+            return points.Count;
+        }
+        private int DijkstrasBetweenPoints(GridInfo gridInfo, (int, int) start, int startDirection, (int, int) end)
+        {
+            var unvisitedTransforms = new PriorityQueue<(Transform, int), int>();
+            var visitedTransforms = new HashSet<Transform>();
+            var visitedPoints = new Dictionary<(int, int), int>();
+
+            var curTransform = new Transform(
+                start.Item1,
+                start.Item2,
+                startDirection
+                );
+
+            unvisitedTransforms.Enqueue((curTransform, 0), 0);
+
+            int smallestCost = int.MaxValue;
+
+            while (unvisitedTransforms.Count > 0)
+            {
+                (curTransform, int cost) = unvisitedTransforms.Dequeue();
+                if ((curTransform.Row, curTransform.Col) == end)
+                {
+                    smallestCost = cost;
+                    break;
+                }
+
+                foreach ((Transform newTransform, int additionalCost) in gridInfo.GetPossibleMoves(curTransform))
+                {
+                    if (gridInfo.IsFacingWall(newTransform)
+                        && additionalCost == 1000)
+                    {
+                        continue;
+                    }
+
+                    if (!visitedTransforms.Contains(newTransform))
+                    {
+                        visitedTransforms.Add(newTransform);
+                        unvisitedTransforms.Enqueue((newTransform, cost + additionalCost), cost + additionalCost);
                         visitedPoints.TryAdd((newTransform.Row, newTransform.Col), cost + additionalCost);
                     }
                 }
             }
-            
-            return CountPointsOnAShortestPath(visitedPoints, gridInfo).ToString();
-        }
-        private int CountPointsOnAShortestPath(Dictionary<(int, int), int> searchedPoints, GridInfo gridInfo)
-        {
-            int count = 1;
 
-            var frontierPoints = new Queue<((int, int), int)>();
-            var endPoint = (gridInfo.EndLocation.Item1, gridInfo.EndLocation.Item2);
-            int lastDistance = searchedPoints[endPoint];
-
-            frontierPoints.Enqueue((endPoint, lastDistance));
-
-            while ( frontierPoints.Count > 0 )
-            {
-                var curPointInfo = frontierPoints.Dequeue();
-                var possibleNeighborPoints = gridInfo.GetNeighborPoints(curPointInfo.Item1);
-                foreach (var possibleNeighborPoint in possibleNeighborPoints)
-                {
-                    if (searchedPoints.ContainsKey(possibleNeighborPoint)
-                        && (searchedPoints[possibleNeighborPoint] + 1001 == curPointInfo.Item2
-                        || searchedPoints[possibleNeighborPoint] - 999 == curPointInfo.Item2
-                        || searchedPoints[possibleNeighborPoint] + 1 == curPointInfo.Item2)
-                        && !frontierPoints.Contains((possibleNeighborPoint, searchedPoints[possibleNeighborPoint])))
-                    {
-                        count++;
-                        frontierPoints.Enqueue((possibleNeighborPoint, searchedPoints[possibleNeighborPoint]));
-                    }
-                }
-            }
-
-            return count;
+            return smallestCost;
         }
     }
 }
