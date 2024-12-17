@@ -56,7 +56,96 @@ namespace AoC2024
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            (int rA, int rB, int rC, int[] instructions) = (2024, 0, 0, [0, 3, 5, 4, 3, 0]);
+            long registerA = rA;
+            long registerB = rB;
+            long registerC = rC;
+
+            registerA = 0;
+            long count = registerA;
+            
+            bool outputIsWrong = true;
+            
+            while (outputIsWrong)
+            {
+                //Console.WriteLine(registerA);
+                int outputIndex = 0;
+                bool hadBadOutput = false;
+
+                int instructionPointer = 0;
+
+                while (!hadBadOutput && instructionPointer < instructions.Length)
+                {
+                    int instruction = instructions[instructionPointer];
+                    int operand = instructions[instructionPointer + 1];
+
+                    switch (instruction)
+                    {
+                        case 0:
+                            registerA = registerA / (int)Math.Pow(2, GetCombo(operand, registerA, registerB, registerC));
+                            break;
+                        case 1:
+                            registerB ^= (long)operand;
+                            break;
+                        case 2:
+                            registerB = GetCombo(operand, registerA, registerB, registerC) % 8;
+                            break;
+                        case 3:
+                            if (registerA != 0)
+                            {
+                                instructionPointer = operand - 2;
+                            }
+                            break;
+                        case 4:
+                            registerB ^= registerC;
+                            break;
+                        case 5:
+                            long newOutput = GetCombo(operand, registerA, registerB, registerC) % 8;
+                            if (outputIndex >= instructions.Length || instructions[outputIndex] != newOutput)
+                            {
+                                hadBadOutput = true;
+                            }
+                            else
+                            {
+                                outputIndex++;
+                            }
+                            break;
+                        case 6:
+                            registerB = registerA / (int)Math.Pow(2, GetCombo(operand, registerA, registerB, registerC));
+                            break;
+                        case 7:
+                            registerC = registerA / (int)Math.Pow(2, GetCombo(operand, registerA, registerB, registerC));
+                            break;
+                    }
+                    instructionPointer += 2;
+                }
+                if (hadBadOutput == false && outputIndex == instructions.Length)
+                {
+                    outputIsWrong = false;
+                }
+                else
+                {
+                    registerA = ++count;
+                }
+            }
+
+            return count.ToString();
+        }
+        private long GetCombo(int instruction, long registerA, long registerB, long registerC)
+        {
+            switch (instruction)
+            {
+                case 4:
+                    return registerA;
+                case 5:
+                    return registerB;
+                case 6:
+                    return registerC;
+                case 7:
+                    throw new Exception("7 is Reserved, program not valid");
+                default:
+                    return instruction;
+            }
         }
         private int GetCombo(int instruction, int registerA, int registerB, int registerC)
         {
