@@ -16,6 +16,10 @@
                 this.Start = (0, 0);
                 this.End = (endRow, endCol);
             }
+            public string FallingByteString(int index)
+            {
+                return $"{FallingBytes[index].Item2},{FallingBytes[index].Item1}";
+            }
             private static (int, int)[] ParseFallingBytesInput(string[] fallingBytes)
             {
                 var bytes = new LinkedList<(int, int)>();
@@ -89,7 +93,46 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var grid = new GridInfo(_input.Lines, 70, 70);
+
+            int fallenBytesCount = 1024;
+            while (HasPathToEndAfterBytes(grid, fallenBytesCount))
+            {
+                fallenBytesCount++;
+            }
+
+            return grid.FallingByteString(fallenBytesCount - 1);
+        }
+        private bool HasPathToEndAfterBytes(GridInfo grid, int fallenBytesCount)
+        {
+            var locationsWithFallenBytes = new HashSet<(int, int)>(new ArraySegment<(int, int)>(grid.FallingBytes, 0, fallenBytesCount));
+
+            var visited = new HashSet<(int, int)>();
+            var queue = new Queue<(int, int)>();
+
+            queue.Enqueue(grid.Start);
+            visited.Add(grid.Start);
+
+            while (queue.Count > 0)
+            {
+                var curPoint = queue.Dequeue();
+                if (curPoint == grid.End)
+                {
+                    return true;
+                }
+                foreach (var nextPoint in grid.NeighborsInGrid(curPoint))
+                {
+                    if (visited.Contains(nextPoint)
+                        || locationsWithFallenBytes.Contains(nextPoint))
+                    {
+                        continue;
+                    }
+                    queue.Enqueue(nextPoint);
+                    visited.Add(nextPoint);
+                }
+            }
+
+            return false;
         }
     }
 }
