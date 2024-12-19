@@ -25,7 +25,44 @@ namespace AoC2024
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            (string[] patterns, string[] designs) = ParsePatternsAndDesigns(_input.Lines);
+
+            string regexString = $"^({string.Join('|', patterns)})+$";
+            var patternMatcher = new Regex(regexString);
+
+            long permutationSum = 0;
+            foreach (var design in designs)
+            {
+                permutationSum += countPermutations(design, patterns);
+            }
+
+            return permutationSum.ToString();
+        }
+        private Dictionary<string, long> PermutationMemo = new Dictionary<string, long>();
+        private long countPermutations(string design, string[] patterns)
+        {
+            if (design == "")
+            {
+                return 1;
+            }
+
+            if (PermutationMemo.ContainsKey(design))
+            {
+                return PermutationMemo[design];
+            }
+
+            long permutations = 0;
+            foreach (var pattern in patterns)
+            {
+                if (design.StartsWith(pattern))
+                {
+                    permutations += countPermutations(design.Substring(pattern.Length), patterns);
+                }
+            }
+
+            PermutationMemo[design] = permutations;
+
+            return permutations;
         }
         private (string[], string[]) ParsePatternsAndDesigns(string[] lines)
         {
