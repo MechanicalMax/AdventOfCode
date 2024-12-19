@@ -26,20 +26,18 @@ namespace AoC2024
         public override string PartB()
         {
             (string[] patterns, string[] designs) = ParsePatternsAndDesigns(_input.Lines);
-
-            string regexString = $"^({string.Join('|', patterns)})+$";
-            var patternMatcher = new Regex(regexString);
-
+            
+            // Remember, AoC likes HUGE NUMBERS -> ints are too small
             long permutationSum = 0;
             foreach (var design in designs)
             {
-                permutationSum += countPermutations(design, patterns);
+                permutationSum += CountPermutations(design, patterns);
             }
 
             return permutationSum.ToString();
         }
-        private Dictionary<string, long> PermutationMemo = new Dictionary<string, long>();
-        private long countPermutations(string design, string[] patterns)
+        private Dictionary<string, long> PermutationMemo = [];
+        private long CountPermutations(string design, string[] patterns)
         {
             if (design == "")
             {
@@ -56,7 +54,7 @@ namespace AoC2024
             {
                 if (design.StartsWith(pattern))
                 {
-                    permutations += countPermutations(design.Substring(pattern.Length), patterns);
+                    permutations += CountPermutations(design[pattern.Length..], patterns);
                 }
             }
 
