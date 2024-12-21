@@ -103,92 +103,100 @@
         }
         public override string PartA()
         {
-            var originalGrid = new GridInfo(_input.Lines);
-            int originalFinishTime = BreadthFirstSearchStartToEnd(originalGrid);
-
-            int count = 0;
-
-            //foreach (var cheatInfo in FindCheatLocations(originalGrid))
-            //{
-            //    var updatedGrid = new GridInfo(originalGrid, cheatInfo.Item1, cheatInfo.Item2);
-            //    int newFinishTime = BreadthFirstSearchStartToEnd(updatedGrid);
-
-            //    if (originalFinishTime - newFinishTime >= 100)
-            //    {
-            //        count++;
-            //    }
-            //}
-
-            return count.ToString();
-        }
-        public override string PartB()
-        {
             var gridInfo = new GridInfo(_input.Lines);//"###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
-            var distancesFromStart = GetPointDistances(gridInfo);
-            int minimumTimeSaved = 2;
+            var pointsFromStartToEnd = GetPointsFromStartToEnd(gridInfo);
+            int minimumTimeSaved = 100;
             int maximumCheatTime = 2;
 
             int cheatCount = 0;
             var savingsInfo = new Dictionary<int, int>();
 
-            for (int distanceFromStart = 0; distanceFromStart < distancesFromStart.Count - minimumTimeSaved; distanceFromStart++)
+            for (int distanceFromStart = 0; distanceFromStart < pointsFromStartToEnd.Count - minimumTimeSaved; distanceFromStart++)
             {
-                var cheatStartPoint = distancesFromStart[distanceFromStart];
-                var visitedPoints = new HashSet<(int, int)>();
-                var wallSearchFrontier = new List<(int, int)>() { cheatStartPoint };
-
-                visitedPoints.Add(cheatStartPoint);
-
-                for (int cheatTime = 1; cheatTime <= maximumCheatTime; cheatTime++)
+                var curSearchPoint = pointsFromStartToEnd[distanceFromStart];
+                for (int cheatLength = 2; cheatLength <= maximumCheatTime; cheatLength++)
                 {
-                    var newWallSearchFrontier = new List<(int, int)>();
-                    foreach (var curFrontierPoint in wallSearchFrontier)
+                    foreach (var surroundingPoint in GetPointsAroundPoint(cheatLength, curSearchPoint.Item1, curSearchPoint.Item2))
                     {
-                        foreach (var nextFrontierpoint in gridInfo.AllNeighborsInGrid(curFrontierPoint))
+                        if (pointsFromStartToEnd.Contains(surroundingPoint))
                         {
-                            if (visitedPoints.Contains(nextFrontierpoint))
-                            {
-                                continue;
-                            }
-                            visitedPoints.Add(nextFrontierpoint);
+                            int endPointDistance = pointsFromStartToEnd.IndexOf(surroundingPoint);
+                            int timeSaved = endPointDistance - cheatLength - distanceFromStart;
 
-                            if (gridInfo.Grid[nextFrontierpoint.Item1, nextFrontierpoint.Item2] != '#')
+                            if (timeSaved >= minimumTimeSaved)
                             {
-                                int endpointDistancefromStart = distancesFromStart.IndexOf(nextFrontierpoint);
-                                if (endpointDistancefromStart == -1)
+                                cheatCount++;
+                                if (savingsInfo.ContainsKey(timeSaved))
                                 {
-                                    throw new Exception("Point not in path");
+                                    savingsInfo[timeSaved]++;
                                 }
-
-                                int timeSaved = endpointDistancefromStart - cheatTime - distanceFromStart;
-                                Console.WriteLine($"Start:{distancesFromStart[distanceFromStart]} [{distanceFromStart}]; End: {nextFrontierpoint} [{endpointDistancefromStart}]; Savings: {timeSaved} [cheatTime: {cheatTime}]");
-
-                                if (timeSaved >= minimumTimeSaved)
+                                else
                                 {
-                                    cheatCount++;
-                                    if (savingsInfo.ContainsKey(timeSaved))
-                                    {
-                                        savingsInfo[timeSaved]++;
-                                    }
-                                    else
-                                    {
-                                        savingsInfo.Add(timeSaved, 1 );
-                                    }
+                                    savingsInfo.Add(timeSaved, 1);
                                 }
-                            }
-                            else
-                            {
-                                newWallSearchFrontier.Add(nextFrontierpoint);
                             }
                         }
                     }
-                    wallSearchFrontier = newWallSearchFrontier;
                 }
             }
 
             return cheatCount.ToString();
         }
-        private List<(int, int)> GetPointDistances(GridInfo gridInfo)
+        public override string PartB()
+        {
+            var gridInfo = new GridInfo(_input.Lines);//"###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
+            var pointsFromStartToEnd = GetPointsFromStartToEnd(gridInfo);
+            int minimumTimeSaved = 100;
+            int maximumCheatTime = 2;
+
+            int cheatCount = 0;
+            var savingsInfo = new Dictionary<int, int>();
+
+            for (int distanceFromStart = 0; distanceFromStart < pointsFromStartToEnd.Count - minimumTimeSaved; distanceFromStart++)
+            {
+                var curSearchPoint = pointsFromStartToEnd[distanceFromStart];
+                for (int cheatLength = 2; cheatLength <= maximumCheatTime; cheatLength++)
+                {
+                    foreach (var surroundingPoint in GetPointsAroundPoint(cheatLength, curSearchPoint.Item1, curSearchPoint.Item2))
+                    {
+                        if (pointsFromStartToEnd.Contains(surroundingPoint))
+                        {
+                            int endPointDistance = pointsFromStartToEnd.IndexOf(surroundingPoint);
+                            int timeSaved = endPointDistance - cheatLength - distanceFromStart;
+
+                            if (timeSaved >= minimumTimeSaved)
+                            {
+                                cheatCount++;
+                                if (savingsInfo.ContainsKey(timeSaved))
+                                {
+                                    savingsInfo[timeSaved]++;
+                                }
+                                else
+                                {
+                                    savingsInfo.Add(timeSaved, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return cheatCount.ToString();
+        }
+        private HashSet<(int, int)> GetPointsAroundPoint(int distance, int row, int col)
+        {
+            var surroundingPoints = new HashSet<(int, int)>();
+
+            for (int rowChange = -distance; rowChange <= distance; rowChange++)
+            {
+                int positiveColChange = distance - Math.Abs(rowChange);
+                surroundingPoints.Add((row + rowChange, col + positiveColChange));
+                surroundingPoints.Add((row + rowChange, col - positiveColChange));
+            }
+
+            return surroundingPoints;
+        }
+        private List<(int, int)> GetPointsFromStartToEnd(GridInfo gridInfo)
         {
             var pointDistances = new List<(int, int)>();
             var queue = new Queue<(int, int)>();
