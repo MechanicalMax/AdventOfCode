@@ -59,6 +59,19 @@
                 }
                 return startEndPairs;
             }
+            public List<(int, int)> AllNeighborsInGrid((int, int) point)
+            {
+                var neighbors = new List<(int, int)>();
+                foreach (var direction in Directions)
+                {
+                    var possibleNeighbor = (point.Item1 + direction.Item1, point.Item2 + direction.Item2);
+                    if (IsInGrid(possibleNeighbor))
+                    {
+                        neighbors.Add(possibleNeighbor);
+                    }
+                }
+                return neighbors;
+            }
             public List<(int, int)> ValidNeighborsInGrid((int, int) point)
             {
                 return ValidNeighborsInGrid(point.Item1, point.Item2);
@@ -95,22 +108,100 @@
 
             int count = 0;
 
-            foreach (var cheatInfo in FindCheatLocations(originalGrid))
-            {
-                var updatedGrid = new GridInfo(originalGrid, cheatInfo.Item1, cheatInfo.Item2);
-                int newFinishTime = BreadthFirstSearchStartToEnd(updatedGrid);
+            //foreach (var cheatInfo in FindCheatLocations(originalGrid))
+            //{
+            //    var updatedGrid = new GridInfo(originalGrid, cheatInfo.Item1, cheatInfo.Item2);
+            //    int newFinishTime = BreadthFirstSearchStartToEnd(updatedGrid);
 
-                if (originalFinishTime - newFinishTime >= 100)
-                {
-                    count++;
-                }
-            }
+            //    if (originalFinishTime - newFinishTime >= 100)
+            //    {
+            //        count++;
+            //    }
+            //}
 
             return count.ToString();
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var gridInfo = new GridInfo("###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
+            var distancesFromStart = GetPointDistances(gridInfo);
+            int minimumTimeSaved = 50;
+            int maximumCheatTime = 20;
+
+            int cheatCount = 0;
+
+            for (int distanceFromStart = 0; distanceFromStart < distancesFromStart.Count - minimumTimeSaved; distanceFromStart++)
+            {
+                var cheatStartPoint = distancesFromStart[distanceFromStart];
+                var visitedPoints = new HashSet<(int, int)>();
+                var wallSearchFrontier = gridInfo.AllNeighborsInGrid(cheatStartPoint);
+
+                visitedPoints.Add(cheatStartPoint);
+
+                for (int cheatTime = 2; cheatTime <= maximumCheatTime; cheatTime++)
+                {
+                    var newWallSearchFrontier = new List<(int, int)>();
+                    foreach (var curFrontierPoint in wallSearchFrontier)
+                    {
+                        foreach (var nextFrontierpoint in gridInfo.AllNeighborsInGrid(curFrontierPoint))
+                        {
+                            if (visitedPoints.Contains(nextFrontierpoint))
+                            {
+                                continue;
+                            }
+                            visitedPoints.Add(nextFrontierpoint);
+
+                            if (gridInfo.Grid[nextFrontierpoint.Item1, nextFrontierpoint.Item2] != '#')
+                            {
+                                int endpointDistancefromStart = distancesFromStart.IndexOf(nextFrontierpoint);
+                                if (endpointDistancefromStart == -1)
+                                {
+                                    throw new Exception("Point not in path");
+                                }
+
+                                int timeSaved = endpointDistancefromStart - cheatTime - distanceFromStart;
+                                Console.WriteLine($"Start:{distancesFromStart[distanceFromStart]}; End: {nextFrontierpoint}; Savings: {timeSaved}");
+
+                                if (timeSaved == 74)//timeSaved >= minimumTimeSaved)
+                                {
+                                    cheatCount++;
+                                }
+                            }
+                            else
+                            {
+                                newWallSearchFrontier.Add(nextFrontierpoint);
+                            }
+                        }
+                    }
+                    wallSearchFrontier = newWallSearchFrontier;
+                }
+            }
+
+            return cheatCount.ToString();
+        }
+        private List<(int, int)> GetPointDistances(GridInfo gridInfo)
+        {
+            var pointDistances = new List<(int, int)>();
+            var queue = new Queue<(int, int)>();
+
+            queue.Enqueue(gridInfo.Start);
+            pointDistances.Add(gridInfo.Start);
+
+            while (queue.Count > 0)
+            {
+                var point = queue.Dequeue();
+                foreach (var neighbor in gridInfo.ValidNeighborsInGrid(point))
+                {
+                    if (!pointDistances.Contains(neighbor))
+                    {
+                        pointDistances.Add(neighbor);
+                        queue.Enqueue(neighbor);
+                        continue;
+                    }
+                }
+            }
+
+            return pointDistances;
         }
         private static HashSet<((int, int), (int, int))> FindCheatLocations(GridInfo gridInfo)
         {
