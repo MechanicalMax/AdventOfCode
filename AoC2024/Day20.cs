@@ -147,7 +147,7 @@
             var gridInfo = new GridInfo(_input.Lines);//"###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
             var pointsFromStartToEnd = GetPointsFromStartToEnd(gridInfo);
             int minimumTimeSaved = 100;
-            int maximumCheatTime = 2;
+            int maximumCheatTime = 20;
 
             int cheatCount = 0;
             var savingsInfo = new Dictionary<int, int>();
