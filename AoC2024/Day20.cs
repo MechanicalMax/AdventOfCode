@@ -123,22 +123,23 @@
         }
         public override string PartB()
         {
-            var gridInfo = new GridInfo("###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
+            var gridInfo = new GridInfo(_input.Lines);//"###############\r\n#...#...#.....#\r\n#.#.#.#.#.###.#\r\n#S#...#.#.#...#\r\n#######.#.#.###\r\n#######.#.#...#\r\n#######.#.###.#\r\n###..E#...#...#\r\n###.#######.###\r\n#...###...#...#\r\n#.#####.#.###.#\r\n#.#...#.#.#...#\r\n#.#.#.#.#.#.###\r\n#...#...#...###\r\n###############".Split("\r\n"));
             var distancesFromStart = GetPointDistances(gridInfo);
-            int minimumTimeSaved = 50;
-            int maximumCheatTime = 20;
+            int minimumTimeSaved = 2;
+            int maximumCheatTime = 2;
 
             int cheatCount = 0;
+            var savingsInfo = new Dictionary<int, int>();
 
             for (int distanceFromStart = 0; distanceFromStart < distancesFromStart.Count - minimumTimeSaved; distanceFromStart++)
             {
                 var cheatStartPoint = distancesFromStart[distanceFromStart];
                 var visitedPoints = new HashSet<(int, int)>();
-                var wallSearchFrontier = gridInfo.AllNeighborsInGrid(cheatStartPoint);
+                var wallSearchFrontier = new List<(int, int)>() { cheatStartPoint };
 
                 visitedPoints.Add(cheatStartPoint);
 
-                for (int cheatTime = 2; cheatTime <= maximumCheatTime; cheatTime++)
+                for (int cheatTime = 1; cheatTime <= maximumCheatTime; cheatTime++)
                 {
                     var newWallSearchFrontier = new List<(int, int)>();
                     foreach (var curFrontierPoint in wallSearchFrontier)
@@ -160,11 +161,19 @@
                                 }
 
                                 int timeSaved = endpointDistancefromStart - cheatTime - distanceFromStart;
-                                Console.WriteLine($"Start:{distancesFromStart[distanceFromStart]}; End: {nextFrontierpoint}; Savings: {timeSaved}");
+                                Console.WriteLine($"Start:{distancesFromStart[distanceFromStart]} [{distanceFromStart}]; End: {nextFrontierpoint} [{endpointDistancefromStart}]; Savings: {timeSaved} [cheatTime: {cheatTime}]");
 
-                                if (timeSaved == 74)//timeSaved >= minimumTimeSaved)
+                                if (timeSaved >= minimumTimeSaved)
                                 {
                                     cheatCount++;
+                                    if (savingsInfo.ContainsKey(timeSaved))
+                                    {
+                                        savingsInfo[timeSaved]++;
+                                    }
+                                    else
+                                    {
+                                        savingsInfo.Add(timeSaved, 1 );
+                                    }
                                 }
                             }
                             else
