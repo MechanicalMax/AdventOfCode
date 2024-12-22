@@ -35,21 +35,34 @@
                 string robotTwoSequence = ConvertPadToDirectional(code, NumPad);
                 paths.UnionWith(GetAllShortestPaths(robotTwoSequence));
 
-                var robotThreePaths = new HashSet<string>();
-                foreach (var path in paths)
+                for (int _ = 0; _ < 2; _++)
                 {
-                    string robotThreeSequence = ConvertPadToDirectional(path, DirectionalPad);
-                    robotThreePaths.UnionWith(GetAllShortestPaths(robotThreeSequence));
-                }
-                paths = robotThreePaths;
+                    var nextPaths = new HashSet<string>();
+                    foreach (var path in paths)
+                    {
+                        string shortestSequence = ConvertPadToDirectional(path, DirectionalPad);
+                        nextPaths.UnionWith(GetAllShortestPaths(shortestSequence));
+                    }
 
-                var operatorPaths = new HashSet<string>();
-                foreach (var path in paths)
-                {
-                    string operatorSequence = ConvertPadToDirectional(path, DirectionalPad);
-                    operatorPaths.UnionWith(GetAllShortestPaths(operatorSequence));
+                    var optimizedNextPaths = new HashSet<string>();
+                    int minNextPathLength = int.MaxValue;
+                    foreach (var path in nextPaths)
+                    {
+                        if (path.Length < minNextPathLength)
+                        {
+                            minNextPathLength = path.Length;
+                        }
+                    }
+                    foreach (var path in nextPaths)
+                    {
+                        if (path.Length == minNextPathLength)
+                        {
+                            optimizedNextPaths.Add(path);
+                        }
+                    }
+
+                    paths = optimizedNextPaths;
                 }
-                paths = operatorPaths;
 
                 var finalPaths = paths.ToList();
                 var minPathLength = int.MaxValue;
