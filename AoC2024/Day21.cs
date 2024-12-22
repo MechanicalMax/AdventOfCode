@@ -2,6 +2,10 @@
 {
     internal class Day21 : AoCSupport.Day
     {
+        /*
+         * Mess of assorted functions; core code from HyperNeutrino:
+         * https://youtu.be/dqzAaj589cM?si=z7Ph8PLwr4WjwNwU
+         */
         public override string DayNumber => "21";
         public override string Year => "2024";
         private const char NoKey = 'X';
@@ -26,127 +30,153 @@
         };
         public override string PartA()
         {
-            var codeSequences = new Dictionary<string, string>();
+            var directionalSequences = ComputeSequences(DirectionalPad);
 
-            foreach (var code in new string[] {"029A", "980A", "179A", "456A", "379A"})
+            long complexitySum = 0;
+            foreach (var code in _input.Lines)//new string[] {"029A", "980A", "179A", "456A", "379A"})
             {
                 var paths = new HashSet<string>();
 
-                string robotTwoSequence = ConvertPadToDirectional(code, NumPad);
-                paths.UnionWith(GetAllShortestPaths(robotTwoSequence));
+                var possibleInputs = ConvertPadToDirectional(code, NumPad);
 
-                for (int _ = 0; _ < 2; _++)
+                long minLength = long.MaxValue;
+                foreach (var input in possibleInputs)
                 {
-                    var nextPaths = new HashSet<string>();
-                    foreach (var path in paths)
-                    {
-                        string shortestSequence = ConvertPadToDirectional(path, DirectionalPad);
-                        nextPaths.UnionWith(GetAllShortestPaths(shortestSequence));
-                    }
-
-                    var optimizedNextPaths = new HashSet<string>();
-                    int minNextPathLength = int.MaxValue;
-                    foreach (var path in nextPaths)
-                    {
-                        if (path.Length < minNextPathLength)
-                        {
-                            minNextPathLength = path.Length;
-                        }
-                    }
-                    foreach (var path in nextPaths)
-                    {
-                        if (path.Length == minNextPathLength)
-                        {
-                            optimizedNextPaths.Add(path);
-                        }
-                    }
-
-                    paths = optimizedNextPaths;
+                    minLength = long.Min(minLength, ComputeLength(input, 2, directionalSequences));
                 }
 
-                var finalPaths = paths.ToList();
-                var minPathLength = int.MaxValue;
-                string minPath = "";
-                foreach (var path in finalPaths)
-                {
-                    if (path.Length < minPathLength)
-                    {
-                        minPathLength = path.Length;
-                        minPath = path;
-                    }
-                }
-
-                codeSequences[code] = minPath;
+                complexitySum += CalculateCodeComplexity(code, minLength);
             }
 
-            int complexitySum = 0;
-            foreach (var codeInfo in codeSequences)
-            {
-                complexitySum += CalculateCodeComplexity(codeInfo.Key, codeInfo.Value.Length);
-            }
             return complexitySum.ToString();
         }
         public override string PartB()
         {
             throw new NotImplementedException();
         }
-        private string DirectionalPath(char startKey, char endKey, char[,] interfacePad)
+        private Dictionary<(char, char), List<string>> ComputeSequences(char[,] keypad)
         {
-            var startPoint = FindKeyPointOnPad(startKey, interfacePad);
-            var endPoint = FindKeyPointOnPad(endKey, interfacePad);
-
-            var visitedPoints = new HashSet<(int, int)>();
-            var queue = new Queue<((int, int), string)>();
-
-            queue.Enqueue((startPoint, ""));
-            visitedPoints.Add(startPoint);
-
-            while (queue.Count > 0)
+            var positions = new Dictionary<char, (int, int)>();
+            for (int row = 0; row < keypad.GetLength(0); row++)
             {
-                (var curPoint, string curPath) = queue.Dequeue();
-                if (curPoint == endPoint)
+                for (int col = 0; col < keypad.GetLength(1); col++)
                 {
-                    return curPath + 'A';
-                }
-
-                foreach (var NeighborInfo in ChangeVectorArrow)
-                {
-                    var nextPoint = (curPoint.Item1 + NeighborInfo.Key.Item1,
-                        curPoint.Item2 + NeighborInfo.Key.Item2);
-                    if (IsInPadBounds(nextPoint.Item1, nextPoint.Item2, interfacePad)
-                        && !visitedPoints.Contains(nextPoint))
+                    if (keypad[row, col] != NoKey)
                     {
-                        queue.Enqueue(((nextPoint), curPath + NeighborInfo.Value));
+                        positions[keypad[row, col]] = ((row, col));
                     }
                 }
             }
+            var sequences = new Dictionary<(char, char), List<string>>();
 
-            throw new Exception("End Key Not Found");
-        }
-        private string ConvertPadToDirectional(string sequence, char[,] interfacePad)
-        {
-            string newSequence = "";
-            char lastKey = 'A';
-            foreach (var keypress in sequence)
+            foreach (var startInfo in positions)
             {
-                newSequence += DirectionalPath(lastKey, keypress, interfacePad);
-                lastKey = keypress;
-            }
-            return newSequence;
-        }
-        private (int, int) FindKeyPointOnPad(char key, char[,] pad)
-        {
-            for (int row = 0; row < pad.GetLength(0); row++)
-            {
-                for (int col = 0; col < pad.GetLength(1); col++)
+                foreach (var endInfo in positions)
                 {
-                    if (pad[row, col] == key)
+                    if (startInfo.Key == endInfo.Key)
                     {
-                        return (row, col);
+                        sequences[(startInfo.Key, endInfo.Key)] = new List<string>() { "A" };
+                        continue;
                     }
+
+                    var possibilePaths = new List<string>();
+                    var queue = new Queue<((int, int), string)>();
+                    queue.Enqueue((startInfo.Value, ""));
+                    int optimalLength = int.MaxValue;
+                    bool foundAllPossible = false;
+                    while (queue.Count > 0)
+                    {
+                        (var curPoint, string moves) = queue.Dequeue();
+
+                        foreach (var NeighborInfo in ChangeVectorArrow)
+                        {
+                            var nextPoint = (curPoint.Item1 + NeighborInfo.Key.Item1,
+                                curPoint.Item2 + NeighborInfo.Key.Item2);
+                            if (!IsInPadBounds(nextPoint.Item1, nextPoint.Item2, keypad))
+                            {
+                                continue;
+                            }
+                            if (nextPoint == endInfo.Value)
+                            {
+                                if (optimalLength < moves.Length + 1)
+                                {
+                                    foundAllPossible = true;
+                                    break;
+                                }
+                                optimalLength = moves.Length + 1;
+                                possibilePaths.Add(moves + NeighborInfo.Value + "A");
+                            }
+                            else
+                            {
+                                queue.Enqueue((nextPoint, moves + NeighborInfo.Value));
+                            }
+                        }
+                        if (foundAllPossible == true)
+                        {
+                            break;
+                        }
+                    }
+
+                    sequences[(startInfo.Key, endInfo.Key)] = possibilePaths;
                 }
             }
-            throw new Exception("Key Not Found");
+
+            return sequences;
+        }
+        private Dictionary<(string, int), long> SeenComputeLengths = new Dictionary<(string, int), long>();
+        private long ComputeLength(string sequence, int depth, Dictionary<(char, char), List<string>> directionalPadSequences)
+        {
+            if (SeenComputeLengths.ContainsKey((sequence, depth)))
+            {
+                return SeenComputeLengths[(sequence, depth)];
+            }
+
+            string fullSequence = "A" + sequence;
+            if (depth == 1)
+            {
+                long sum = 0;
+                for (int i = 0; i < fullSequence.Length - 1; i++)
+                {
+                    sum += directionalPadSequences[(fullSequence[i], fullSequence[i + 1])][0].Length;
+                }
+                SeenComputeLengths[(sequence, depth)] = sum;
+                return sum;
+            }
+
+            long length = 0;
+            for (int i = 0; i < fullSequence.Length - 1; i++)
+            {
+                long minimumForButton = long.MaxValue;
+                foreach (var subseq in directionalPadSequences[(fullSequence[i], fullSequence[i + 1])])
+                {
+                    minimumForButton = long.Min(minimumForButton, ComputeLength(subseq, depth - 1, directionalPadSequences));
+                }
+                length += minimumForButton;
+            }
+
+            SeenComputeLengths[(sequence, depth)] = length;
+            return length;
+        }
+        private List<string> ConvertPadToDirectional(string sequence, char[,] interfacePad)
+        {
+            var numpadSequences = ComputeSequences(NumPad);
+            var possibleSequences = new List<string>() { "" };
+
+            string fullSequence = "A" + sequence;
+            for (int i = 0; i < fullSequence.Length - 1; i++)
+            {
+                var builtSequences = new List<string>();
+                foreach (var nextSequence in numpadSequences[(fullSequence[i], fullSequence[i + 1])])
+                {
+                    foreach (var currentSequence in possibleSequences)
+                    {
+                        builtSequences.Add(currentSequence + nextSequence);
+                    }
+                }
+                possibleSequences = builtSequences;
+            }
+
+            return possibleSequences;
         }
         private bool IsInPadBounds(int row, int col, char[,] pad)
         {
@@ -154,81 +184,9 @@
                 && row < pad.GetLength(0) && col < pad.GetLength(1)
                 && pad[row, col] != NoKey);
         }
-        private int CalculateCodeComplexity(string code, int sequenceLength)
+        private long CalculateCodeComplexity(string code, long sequenceLength)
         {
-            return int.Parse(code.Substring(0, 3)) * sequenceLength;
-        }
-        private HashSet<string> GetAllShortestPaths(string directionalInstructions)
-        {
-            var result = new HashSet<string>();
-
-            int nextAIndex = directionalInstructions.IndexOf('A');
-            if (nextAIndex == -1)
-            {
-                result.Add("");
-                return result;
-            }
-
-            var firstMovementsPermutations = Permute(directionalInstructions.Substring(0, nextAIndex));
-
-            foreach (var ending in GetAllShortestPaths(directionalInstructions.Substring(nextAIndex + 1)))
-            {
-                foreach (var permutation in firstMovementsPermutations)
-                {
-                    result.Add(permutation + "A" + ending);
-                }
-            }
-
-            return result;
-        }
-        // Below functions modified from Geeks For Geeks
-        // https://www.geeksforgeeks.org/write-a-c-program-to-print-all-permutations-of-a-given-string/
-        private static string Swap(string s, int i, int j)
-        {
-            char[] charArray = s.ToCharArray();
-            char temp = charArray[i];
-            charArray[i] = charArray[j];
-            charArray[j] = temp;
-            return new string(charArray);
-        }
-        private static HashSet<string> PermuteRec(string s, int idx, HashSet<string> permutations)
-        {
-            if (idx == s.Length - 1)
-            {
-                permutations.Add(s);
-                return permutations;
-            }
-
-            for (int i = idx; i < s.Length; i++)
-            {
-                s = Swap(s, idx, i);
-
-                permutations.UnionWith(PermuteRec(s, idx + 1, permutations));
-
-                s = Swap(s, idx, i);
-            }
-
-            return permutations;
-        }
-        private Dictionary<string, HashSet<string>> SeenPermutes = new Dictionary<string, HashSet<string>>();
-        private HashSet<string> Permute(string s)
-        {
-            if (SeenPermutes.ContainsKey(s))
-            {
-                return SeenPermutes[s];
-            }
-            else
-            {
-                if (s == "")
-                {
-                    var emptyStringSet = new HashSet<string>();
-                    emptyStringSet.Add("");
-                    return emptyStringSet;
-                }
-                var permutes = PermuteRec(s, 0, new HashSet<string>());
-                SeenPermutes[s] = permutes;
-                return permutes;
-            }
+            return long.Parse(code.Substring(0, 3)) * sequenceLength;
         }
     }
 }
