@@ -22,14 +22,51 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var sequenceTotals = new Dictionary<(int, int, int, int), int>();
+
+            foreach (string start in _input.Lines)
+            {
+                var seenSequences = new HashSet<(int, int, int, int)>();
+                long curResult = long.Parse(start);
+                int[] prices = new int[2000];
+
+                for (int i = 0; i < prices.Length; i++)
+                {
+                    prices[i] = (int) (curResult % 10);
+                    curResult = evolveNumber(curResult);
+                }
+
+                for (int i = 4; i < prices.Length; i++)
+                {
+                    var changes = (
+                        prices[i - 3] - prices[i - 4],
+                        prices[i - 2] - prices[i - 3],
+                        prices[i - 1] - prices[i - 2],
+                        prices[i] - prices[i - 1]
+                        );
+                    if (seenSequences.Contains(changes))
+                    {
+                        continue;
+                    }
+                    seenSequences.Add(changes);
+                    if (sequenceTotals.ContainsKey(changes))
+                    {
+                        sequenceTotals[changes] += prices[i];
+                    }
+                    else
+                    {
+                        sequenceTotals[changes] = prices[i];
+                    }
+                }
+            }
+
+            return sequenceTotals.Values.Max().ToString();
         }
         private long evolveNumber(long secretNumber)
         {
             long stepOne = secretNumber << 6;
             secretNumber ^= stepOne;
             secretNumber %= 16777216;
-            //secretNumber = secretNumber >> 24;
             
             long stepTwo = secretNumber >> 5;
             secretNumber ^= stepTwo;
