@@ -52,7 +52,25 @@
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var directionalSequences = ComputeSequences(DirectionalPad);
+
+            long complexitySum = 0;
+            foreach (var code in _input.Lines)//new string[] {"029A", "980A", "179A", "456A", "379A"})
+            {
+                var paths = new HashSet<string>();
+
+                var possibleInputs = ConvertPadToDirectional(code, NumPad);
+
+                long minLength = long.MaxValue;
+                foreach (var input in possibleInputs)
+                {
+                    minLength = long.Min(minLength, ComputeLength(input, 25, directionalSequences));
+                }
+
+                complexitySum += CalculateCodeComplexity(code, minLength);
+            }
+
+            return complexitySum.ToString();
         }
         private Dictionary<(char, char), List<string>> ComputeSequences(char[,] keypad)
         {
