@@ -1,7 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Data;
-
-namespace AoC2024
+﻿namespace AoC2024
 {
     internal class Day23 : AoCSupport.Day
     {
@@ -37,9 +34,66 @@ namespace AoC2024
 
             return threeInterconnectedComputers.Count.ToString();
         }
+        /*
+        * PartB Based on Code from HyperNeutrino
+        * https://youtu.be/kHIWvxRWQ9k?si=wRaboDPpeqC6lpYj
+        */
         public override string PartB()
         {
-            throw new NotImplementedException();
+            var edgeList = GetEdgeList(_input.Lines);//"kh-tc\r\nqp-kh\r\nde-cg\r\nka-co\r\nyn-aq\r\nqp-ub\r\ncg-tb\r\nvc-aq\r\ntb-ka\r\nwh-tc\r\nyn-cg\r\nkh-ub\r\nta-co\r\nde-co\r\ntc-td\r\ntb-wq\r\nwh-td\r\nta-ka\r\ntd-qp\r\naq-cg\r\nwq-ub\r\nub-vc\r\nde-ta\r\nwq-aq\r\nwq-vc\r\nwh-yn\r\nka-de\r\nkh-ta\r\nco-tc\r\nwh-qp\r\ntb-vc\r\ntd-yn".Split("\r\n"));
+
+            var interconnectedComputers = new HashSet<List<string>>();
+
+            foreach (var nodeInfo in edgeList)
+            {
+                interconnectedComputers = searchConnections(nodeInfo.Key, new List<string> { nodeInfo.Key },
+                    interconnectedComputers, edgeList);
+            }
+
+            string[] maxConnectedComputers = [.. interconnectedComputers.MaxBy(x => x.Count)];
+            Array.Sort(maxConnectedComputers);
+            return string.Join(',', maxConnectedComputers);
+        }
+        private HashSet<List<string>> searchConnections(string node, List<string> required,
+            HashSet<List<string>> interconnectedComputers, Dictionary<string, List<string>> edgeList)
+        {
+            required.Sort();
+            if (interconnectedComputers.Contains(required))
+            {
+                return interconnectedComputers;
+            }
+
+            interconnectedComputers.Add(required);
+            foreach (var neigbor in edgeList[node])
+            {
+                if (required.Contains(neigbor))
+                {
+                    continue;
+                }
+
+                bool neigborIsConnectedToAllRequiredPoints = true;
+                foreach (var requiredConnection in required)
+                {
+                    if (!edgeList[requiredConnection].Contains(neigbor))
+                    {
+                        neigborIsConnectedToAllRequiredPoints = false;
+                        break;
+                    }
+                }
+                if (!neigborIsConnectedToAllRequiredPoints)
+                {
+                    continue;
+                }
+
+                var listWithNeigbor = required;
+                listWithNeigbor.Add(neigbor);
+
+                interconnectedComputers.UnionWith(searchConnections(neigbor,
+                    listWithNeigbor,
+                    interconnectedComputers, edgeList));
+            }
+
+            return interconnectedComputers;
         }
         private Dictionary<string, List<string>> GetEdgeList(string[] lines)
         {
