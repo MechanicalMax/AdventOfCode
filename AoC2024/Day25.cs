@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace AoC2024
+﻿namespace AoC2024
 {
     internal class Day25 : AoCSupport.Day
     {
@@ -72,7 +70,7 @@ namespace AoC2024
         }
         public override string PartB()
         {
-            throw new NotImplementedException();
+            return "Solve AoC 2024!";
         }
     }
 }
