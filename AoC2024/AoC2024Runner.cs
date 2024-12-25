@@ -6,7 +6,7 @@ namespace AoC2024
     {
         public static void Main(string[] args)
         {
-            Day day = new Day24();
+            Day day = new Day25();
 
             // Choose day class from args?
 
