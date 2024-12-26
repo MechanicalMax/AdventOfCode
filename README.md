@@ -18,5 +18,26 @@ Here's to another month of programming challenges!
 Stay creative and keep making ~
 
 ## Program Map
-The **AdventOfCode** Solution contains a class library of helper functions
-and templates (**AoCSupport**) for each of the individual year projects.
+The **AoCSupport** Solution contains helper classes for getting input,
+organizing each day's puzzle, and running each day in a similar formatted
+output. The other solutions in the format of **AoC20XX** contain my puzzle
+input and the code I used to solve the problems.
+
+## Challenge Summary
+Below is a list of days I could not solve the problem independently.
+References and code sources are in line with the puzzles in the comments.
+### 2024
+Overtime days: 20, 21
+
+Part One Individual: 24/25
+
+Part Two Individual: 20/25
+
+| Day | Part | Type of Help |
+|---------------------------|
+| 17 | Two (B) | Reimplemented Solution |
+| 20 | Two (B) | AoC Reddit Hints |
+| 21 | One (A) | Reimplemented Solution |
+| 21 | Two (B) | Reimplemented Solution |
+| 23 | Two (B) | Reimplemented Solution |
+| 24 | Two (B) | Reimplemented Solution |
