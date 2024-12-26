@@ -34,7 +34,7 @@ Part One Individual: 24/25
 Part Two Individual: 20/25
 
 | Day | Part | Type of Help |
-|---------------------------|
+|-----|------|--------------|
 | 17 | Two (B) | Reimplemented Solution |
 | 20 | Two (B) | AoC Reddit Hints |
 | 21 | One (A) | Reimplemented Solution |
